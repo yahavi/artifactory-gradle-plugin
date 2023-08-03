@@ -22,12 +22,13 @@ import org.gradle.api.publish.maven.internal.publisher.MavenNormalizedPublicatio
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin;
 import org.jfrog.build.api.util.FileChecksumCalculator;
 import org.jfrog.build.extractor.clientConfiguration.ArtifactSpec;
+import org.jfrog.build.extractor.clientConfiguration.ArtifactSpecs;
 import org.jfrog.build.extractor.clientConfiguration.ArtifactoryClientConfiguration;
 import org.jfrog.build.extractor.clientConfiguration.LayoutPatterns;
 import org.jfrog.build.extractor.clientConfiguration.deploy.DeployDetails;
+import org.jfrog.gradle.plugin.artifactory.Constant;
 import org.jfrog.gradle.plugin.artifactory.extractor.GradleDeployDetails;
 import org.jfrog.gradle.plugin.artifactory.extractor.PublishArtifactInfo;
-import org.jfrog.gradle.plugin.artifactory.Constant;
 import org.jfrog.gradle.plugin.artifactory.task.ArtifactoryTask;
 
 import javax.xml.namespace.QName;
@@ -383,7 +384,7 @@ public class PublicationUtils {
                         .name(project.getName()).version(project.getVersion().toString())
                         .classifier(artifact.getClassifier())
                         .type(artifact.getType()).build();
-        Multimap<String, CharSequence> artifactSpecsProperties = destination.artifactSpecs.getProperties(spec);
+        Multimap<String, CharSequence> artifactSpecsProperties = ((ArtifactSpecs) destination.getArtifactSpecs()).getProperties(spec);
         addProps(propsToAdd, artifactSpecsProperties);
         return propsToAdd;
     }

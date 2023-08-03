@@ -7,6 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.gradle.api.*;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublicationArtifact;
 import org.gradle.api.publish.PublicationContainer;
@@ -16,9 +18,10 @@ import org.gradle.api.publish.ivy.IvyPublication;
 import org.gradle.api.publish.ivy.internal.publication.IvyPublicationInternal;
 import org.gradle.api.publish.maven.MavenPublication;
 import org.gradle.api.publish.maven.internal.publication.MavenPublicationInternal;
-import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.*;
 import org.gradle.util.ConfigureUtil;
+import org.jfrog.build.extractor.clientConfiguration.ArtifactSpec;
 import org.jfrog.build.extractor.clientConfiguration.ArtifactSpecs;
 import org.jfrog.build.extractor.clientConfiguration.ArtifactoryClientConfiguration;
 import org.jfrog.gradle.plugin.artifactory.Constant;
@@ -37,7 +40,7 @@ import java.util.concurrent.Callable;
  * Collect deploy details from publications in a project.
  * This task can also be used and configure by the user in the build script as a DSL object under 'artifactoryPublish'/'defaults' closure.
  */
-public class ArtifactoryTask extends DefaultTask {
+public abstract class ArtifactoryTask extends DefaultTask {
     private static final Logger log = Logging.getLogger(ArtifactoryTask.class);
 
     @SuppressWarnings("unused")
@@ -48,14 +51,14 @@ public class ArtifactoryTask extends DefaultTask {
     // Properties input
     private final Multimap<String, CharSequence> properties = ArrayListMultimap.create();
     @Input
-    public final ArtifactSpecs artifactSpecs = new ArtifactSpecs();
+    public ListProperty<ArtifactSpec> artifactSpecs = getProject().getObjects().listProperty(ArtifactSpec.class);
 
     // Optional flags and attributes with default values
     private final Map<String, Boolean> flags = new HashMap<>();
     // Is this task initiated from a build server
     private boolean ciServerBuild = false;
-    @Input
-    public boolean skip = false;
+//    @Input
+//    public Property<Boolean> skip = getProject().getObjects().property(Boolean.class);
 
     // Internal attributes
     public Set<IvyPublication> ivyPublications = new HashSet<>();
@@ -77,7 +80,7 @@ public class ArtifactoryTask extends DefaultTask {
     public void evaluateTask() {
         evaluated = true;
         Project project = getProject();
-        if (isSkip()) {
+        if (getSkip()) {
             log.debug("'{}' skipped for project '{}'.", getPath(), project.getName());
             return;
         }
@@ -98,8 +101,9 @@ public class ArtifactoryTask extends DefaultTask {
             return;
         }
         // Add global properties to the specs
-        artifactSpecs.clear();
-        artifactSpecs.addAll(convention.getClientConfig().publisher.getArtifactSpecs());
+//        ArtifactSpecs artifactSpecs = new ArtifactSpecs();
+        getArtifactSpecs().addAll(convention.getClientConfig().publisher.getArtifactSpecs());
+//        getArtifactSpecs().ad(artifactSpecs);
         // Configure the task using the "defaults" action if exists (delegate to the task)
         PublisherConfig config = convention.getPublisherConfig();
         if (config != null) {
@@ -346,8 +350,7 @@ public class ArtifactoryTask extends DefaultTask {
     public void properties(Action<PropertiesConfig> propertiesAction) {
         PropertiesConfig propertiesConfig = new PropertiesConfig(getProject());
         propertiesAction.execute(propertiesConfig);
-        artifactSpecs.clear();
-        artifactSpecs.addAll(propertiesConfig.getArtifactSpecs());
+        getArtifactSpecs().addAll(propertiesConfig.getArtifactSpecs());
     }
 
     @Input
@@ -395,14 +398,26 @@ public class ArtifactoryTask extends DefaultTask {
         return this.ciServerBuild;
     }
 
-    @SuppressWarnings("unused")
     public ArtifactSpecs getArtifactSpecs() {
+        ArtifactSpecs artifactSpecs = new ArtifactSpecs();
+        artifactSpecs.addAll(this.artifactSpecs.get());
         return artifactSpecs;
     }
 
-    public boolean isSkip() {
-        return skip;
-    }
+    @Input
+    public abstract Boolean getSkip();
+
+//    public void setSkip(boolean skip) {
+//        this.skip.set(skip);
+//    }
+//
+//    public void setSkip(Boolean skip) {
+//        this.skip.set(skip);
+//    }
+//
+//    public void setSkip(Object skip) {
+//        System.out.println(skip);
+//    }
 
     public Map<String, String> getDefaultProps() {
         if (defaultProps == null) {
@@ -420,11 +435,6 @@ public class ArtifactoryTask extends DefaultTask {
     @SuppressWarnings("unused")
     public void setCiServerBuild() {
         this.ciServerBuild = true;
-    }
-
-    @SuppressWarnings("unused")
-    public void setSkip(boolean skip) {
-        this.skip = skip;
     }
 
     public void setProperties(Map<String, CharSequence> props) {

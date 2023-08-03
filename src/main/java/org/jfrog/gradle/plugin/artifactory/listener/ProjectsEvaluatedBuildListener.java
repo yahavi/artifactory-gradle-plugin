@@ -11,9 +11,10 @@ import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.publish.PublishingExtension;
+import org.gradle.api.tasks.TaskProvider;
 import org.jfrog.build.extractor.clientConfiguration.ArtifactoryClientConfiguration;
-import org.jfrog.gradle.plugin.artifactory.dsl.ArtifactoryPluginConvention;
 import org.jfrog.gradle.plugin.artifactory.Constant;
+import org.jfrog.gradle.plugin.artifactory.dsl.ArtifactoryPluginConvention;
 import org.jfrog.gradle.plugin.artifactory.task.ArtifactoryTask;
 import org.jfrog.gradle.plugin.artifactory.utils.ConventionUtils;
 import org.jfrog.gradle.plugin.artifactory.utils.ProjectUtils;
@@ -86,18 +87,14 @@ public class ProjectsEvaluatedBuildListener extends BuildAdapter implements Proj
     @Override
     public void afterEvaluate(Project project, ProjectState state) {
         StartParameter startParameter = project.getGradle().getStartParameter();
-        Set<Task> tasks = project.getTasksByName(Constant.ARTIFACTORY_PUBLISH_TASK_NAME, false);
-        tasks.forEach(task -> {
-            if (!(task instanceof ArtifactoryTask)) {
-                return;
-            }
-            ArtifactoryTask collectDeployDetailsTask = (ArtifactoryTask) task;
-            detailsCollectingTasks.add(collectDeployDetailsTask);
-            collectDeployDetailsTask.finalizeByDeployTask(project);
-            if (startParameter.isConfigureOnDemand()) {
-                evaluate(collectDeployDetailsTask);
-            }
-        });
+        TaskProvider<Task> tasks = project.getTasks().named(Constant.ARTIFACTORY_PUBLISH_TASK_NAME);
+
+        ArtifactoryTask collectDeployDetailsTask = (ArtifactoryTask) tasks.get();
+        detailsCollectingTasks.add(collectDeployDetailsTask);
+        collectDeployDetailsTask.finalizeByDeployTask(project);
+        if (startParameter.isConfigureOnDemand()) {
+            evaluate(collectDeployDetailsTask);
+        }
     }
 
     /**
