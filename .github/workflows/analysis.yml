@@ -26,6 +26,12 @@ jobs:
       - name: Spotbugs
         run: ./gradlew clean spotbugs
 
+      # Show report
+      - uses: jwgmeligmeyling/spotbugs-github-action@master
+        with:
+          path: "build/reports/spotbugs/main/spotbugs.xml"
+        if: failure()
+
       # Stop Gradle daemon
       - name: Stop Gradle
         run: ./gradlew --stop
