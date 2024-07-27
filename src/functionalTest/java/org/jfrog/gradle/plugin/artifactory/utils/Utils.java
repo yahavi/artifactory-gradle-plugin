@@ -15,6 +15,7 @@ import org.jfrog.gradle.plugin.artifactory.GradleFunctionalTestBase;
 import org.jfrog.gradle.plugin.artifactory.TestConsts;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

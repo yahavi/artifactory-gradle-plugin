@@ -33,9 +33,9 @@ import static org.jfrog.gradle.plugin.artifactory.utils.Utils.createDeployableAr
 import static org.testng.Assert.assertEquals;
 
 public class GradleFunctionalTestBase {
-    // ArtifactoryManager
-    protected ArtifactoryManager artifactoryManager;
     protected static final Log log = new TestingLog();
+
+    protected ArtifactoryManager artifactoryManager;
     private String username;
     private String adminToken;
     private String platformUrl;
