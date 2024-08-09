@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
@@ -34,6 +35,7 @@ import static org.testng.Assert.assertEquals;
 
 public class GradleFunctionalTestBase {
     // ArtifactoryManager
+    private static final Properties originalProperties = System.getProperties();
     protected ArtifactoryManager artifactoryManager;
     protected static final Log log = new TestingLog();
     private String username;
@@ -63,6 +65,7 @@ public class GradleFunctionalTestBase {
 
     @BeforeClass
     public void init() throws IOException {
+        restoreSystemProperties();
         initArtifactoryManager();
         createTestRepositories();
         initGradleCmdEnvVars();
@@ -239,6 +242,13 @@ public class GradleFunctionalTestBase {
             putIfAbsent(TestConsts.BITESTS_ARTIFACTORY_ENV_VAR_PREFIX + TestConsts.LOCAL_REPO, localRepo);
             putIfAbsent(TestConsts.BITESTS_ARTIFACTORY_ENV_VAR_PREFIX + TestConsts.VIRTUAL_REPO, virtualRepo);
         }};
+    }
+
+    /**
+     * Restore system properties between tests.
+     */
+    private void restoreSystemProperties() {
+        System.setProperties(originalProperties);
     }
 
     /**
